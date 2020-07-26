@@ -3,20 +3,22 @@ package vn.com.line.linedemo
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.model.GlideUrl
+import io.reactivex.Emitter
+import okhttp3.Call
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
+import okio.BufferedSink
+import okio.IOException
+import okio.Okio
 import vn.com.line.linedemo.databinding.ActivityMainBinding
 import vn.com.line.linedemo.network.model.Movie
 import vn.com.line.linedemo.util.GlideApp
 import vn.com.line.linedemo.util.ProgressListener
 import vn.com.line.linedemo.util.ProgressResponseBody
-import java.io.InputStream
 
 
 class MainActivity : BaseActivity(), ProgressListener {
