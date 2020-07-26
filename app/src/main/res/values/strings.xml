@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Line Demo</string>
+    <string name="downloaded_holder">%d Kb downloaded</string>
+    <string name="out_of_image">Run out of images</string>
 </resources>
