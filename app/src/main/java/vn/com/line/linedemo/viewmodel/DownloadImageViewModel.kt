@@ -21,7 +21,7 @@ class DownloadImageViewModel(application: Application) : AndroidViewModel(applic
 
     val downloadState = MutableLiveData<DownloadState>()
     val progressDownload = MutableLiveData<Int>()
-    val imageBitmap = MutableLiveData<Bitmap>()
+    val imagePath = MutableLiveData<String>()
     val movieTitle = MutableLiveData<String>()
     val isOutOfImages = MutableLiveData<Boolean>()
     private var movieData: Movie? = null
@@ -65,11 +65,7 @@ class DownloadImageViewModel(application: Application) : AndroidViewModel(applic
                     }
                     os.write(data, 0, count)
                 }
-                val file = File(path)
-                if (file.exists()) {
-                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                    imageBitmap.postValue(bitmap)
-                }
+                imagePath.postValue(path)
                 downloadState.postValue(DownloadState.STATE_ENDED)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -93,12 +89,8 @@ class DownloadImageViewModel(application: Application) : AndroidViewModel(applic
                 if (indexOfImage < list.size) {
                     val path = list[indexOfImage] ?: ""
                     if (path.isNotEmpty()) {
-                        val file = File(path)
-                        if (file.exists()) {
-                            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                            indexOfImage++
-                            imageBitmap.postValue(bitmap)
-                        }
+                        indexOfImage++
+                        imagePath.postValue(path)
                     }
                 } else {
                     isOutOfImages.postValue(true)

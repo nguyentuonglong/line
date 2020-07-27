@@ -17,7 +17,9 @@ import androidx.lifecycle.Observer
 import vn.com.line.linedemo.R
 import vn.com.line.linedemo.base.BaseActivity
 import vn.com.line.linedemo.databinding.ActivityMainBinding
+import vn.com.line.linedemo.util.ImageUtils
 import vn.com.line.linedemo.viewmodel.DownloadImageViewModel
+import java.io.File
 
 
 class DownloadImageActivity : BaseActivity() {
@@ -27,7 +29,8 @@ class DownloadImageActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this,
+        binding = DataBindingUtil.setContentView(
+            this,
             R.layout.activity_main
         )
         init()
@@ -116,8 +119,15 @@ class DownloadImageActivity : BaseActivity() {
             binding.tvDownloaded.text = downloadedAsString
         })
 
-        viewModel.imageBitmap.observe(this, Observer { bitmap ->
-            binding.ivImage.setImageBitmap(bitmap)
+        viewModel.imagePath.observe(this, Observer { path ->
+            if (binding.ivImage.width > 0 && binding.ivImage.height > 0)
+                ImageUtils.compressImageFromPath(
+                    path,
+                    binding.ivImage.width,
+                    binding.ivImage.height
+                )?.let {
+                    binding.ivImage.setImageBitmap(it)
+                }
         })
 
         viewModel.movieTitle.observe(this, Observer {
