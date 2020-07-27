@@ -2,7 +2,6 @@ package vn.com.line.linedemo
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.Environment
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
@@ -15,6 +14,7 @@ import vn.com.line.linedemo.network.model.Movie
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.*
 
 
 class MainActivity : BaseActivity() {
@@ -56,7 +56,7 @@ class MainActivity : BaseActivity() {
 
     private fun genDummyData(): Movie {
         val listOfImage = listOf(
-            "https://images.unsplash.com/photo-1536998533868-95cde0d71742?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=69a455127db97a5cc05e2d3c9c9ef245&auto=format&fit=crop&w=4000&q=80",
+            "http://movie.phinf.naver.net/20151127_272/1448585271749MCMVs_JPEG/movie_image.jpg?type=m665_443_2",
             "http://movie.phinf.naver.net/20151127_84/1448585272016tiBsF_JPEG/movie_image.jpg?type=m665_443_2",
             "http://movie.phinf.naver.net/20151125_36/1448434523214fPmj0_JPEG/movie_image.jpg?type=m665_443_2"
         )
@@ -75,17 +75,18 @@ class MainActivity : BaseActivity() {
             val length: Int
             try {
                 val url = URL(imageUrl)
-                con = url.openConnection() as HttpURLConnection
-                con.connect()
-                if (con!!.responseCode != HttpURLConnection.HTTP_OK) {
+                con = url.openConnection() as? HttpURLConnection
+                con?.connect()
+                if (con?.responseCode != HttpURLConnection.HTTP_OK) {
                     return@withContext
                 }
                 length = con.contentLength
                 inputStream = con.inputStream
-                os = FileOutputStream(
-                    Environment.getExternalStorageDirectory()
-                        .toString() + File.separator + "a-computer-engineer.jpg"
-                )
+                val randomId = UUID.randomUUID().toString()
+                val name = "$randomId.png"
+                val path =
+                    this@MainActivity.getExternalFilesDir(null).toString() + File.separator + name
+                os = FileOutputStream(path)
                 val data = ByteArray(4096)
                 var total: Long = 0
                 var count: Int
@@ -104,10 +105,7 @@ class MainActivity : BaseActivity() {
                 }
                 withContext(Dispatchers.Main) {
                     binding.progressContainer.isVisible = false
-                    val b = BitmapFactory.decodeFile(
-                        Environment.getExternalStorageDirectory()
-                            .toString() + File.separator + "a-computer-engineer.jpg"
-                    )
+                    val b = BitmapFactory.decodeFile(path)
                     binding.ivImage.setImageBitmap(b)
                 }
 
