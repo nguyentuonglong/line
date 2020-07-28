@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -21,7 +22,7 @@ import vn.com.line.linedemo.util.ImageUtils
 import vn.com.line.linedemo.viewmodel.DownloadImageViewModel
 
 
-class DownloadImageActivity : BaseActivity() {
+class DownloadImageActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel by viewModels<DownloadImageViewModel>()
