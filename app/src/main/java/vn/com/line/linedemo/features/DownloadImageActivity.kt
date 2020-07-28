@@ -3,13 +3,11 @@ package vn.com.line.linedemo.features
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
-import android.view.Window
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
@@ -18,7 +16,6 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import vn.com.line.linedemo.R
-import vn.com.line.linedemo.base.BaseActivity
 import vn.com.line.linedemo.databinding.ActivityMainBinding
 import vn.com.line.linedemo.util.ImageUtils
 import vn.com.line.linedemo.viewmodel.DownloadImageViewModel
@@ -28,6 +25,7 @@ class DownloadImageActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel by viewModels<DownloadImageViewModel>()
+    private var currentOrientation = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +35,6 @@ class DownloadImageActivity : BaseActivity() {
         )
         init()
         setUpViewModels()
-        setGlobalLayoutListener()
         val buildVersion = Build.VERSION.SDK_INT
         if (buildVersion >= Build.VERSION_CODES.M) {
             if (!checkPermission()) {
@@ -46,16 +43,9 @@ class DownloadImageActivity : BaseActivity() {
         }
     }
 
-    private fun setGlobalLayoutListener() {
-        val layout =
-            findViewById<View>(Window.ID_ANDROID_CONTENT)
-        val observer = layout.viewTreeObserver
-        observer.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                layout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                checkPermissionThenFetchImages()
-            }
-        })
+    override fun onResume() {
+        super.onResume()
+        checkPermissionThenFetchImages()
     }
 
     private fun checkPermissionThenFetchImages() {
@@ -86,9 +76,7 @@ class DownloadImageActivity : BaseActivity() {
         when (requestCode) {
             STORAGE_REQUEST_PERMISSION -> if (grantResults.isNotEmpty()) {
                 val storageAccepted = grantResults.first() == PackageManager.PERMISSION_GRANTED
-                if (storageAccepted) {
-                    viewModel.checkLocalImageFolder()
-                } else {
+                if (!storageAccepted) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                             requestPermissions(
@@ -137,8 +125,8 @@ class DownloadImageActivity : BaseActivity() {
         viewModel.imagePath.observe(this, Observer { path ->
             ImageUtils.compressImageFromPath(
                 path,
-                binding.ivImage.width,
-                binding.ivImage.height
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels
             )?.let {
                 binding.ivImage.setImageBitmap(it)
             }
@@ -157,6 +145,12 @@ class DownloadImageActivity : BaseActivity() {
         binding.ivImage.setOnClickListener {
             viewModel.fetchNextImage()
         }
+        currentOrientation = resources.configuration.orientation
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (currentOrientation != newConfig.orientation) viewModel.isRotated = true
     }
 
     companion object {

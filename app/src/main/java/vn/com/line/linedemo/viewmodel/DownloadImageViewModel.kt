@@ -27,6 +27,7 @@ class DownloadImageViewModel(application: Application) : AndroidViewModel(applic
     private var movieData: Movie? = null
     private var indexOfImage = 0
     private var isDownloaded = false
+    var isRotated = false
 
     enum class DownloadState {
         STATE_STARTED, STATE_FAILED, STATE_ENDED
@@ -137,11 +138,31 @@ class DownloadImageViewModel(application: Application) : AndroidViewModel(applic
             genDummyData()
         }
         isDownloaded = dirFiles != null && dirFiles.isNotEmpty()
-        fetchNextImage()
+        if (isRotated) {
+            fetchCurrentImage()
+            isRotated = false
+        } else fetchNextImage()
     }
 
     fun fetchNextImage() {
         if (isDownloaded) loadLocalImage() else loadRemoteImage()
+    }
+
+    private fun fetchCurrentImage() {
+        Completable.fromAction {
+            movieData?.image?.let { list ->
+                if (indexOfImage < list.size) {
+                    val path = list[indexOfImage] ?: ""
+                    if (path.isNotEmpty()) {
+                        imagePath.postValue(path)
+                    }
+                } else {
+                    isOutOfImages.postValue(true)
+                }
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe()
     }
 
     private fun genDummyData() {
