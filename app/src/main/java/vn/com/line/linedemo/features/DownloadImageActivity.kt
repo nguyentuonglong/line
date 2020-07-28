@@ -7,6 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import android.view.Window
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
@@ -19,7 +22,6 @@ import vn.com.line.linedemo.base.BaseActivity
 import vn.com.line.linedemo.databinding.ActivityMainBinding
 import vn.com.line.linedemo.util.ImageUtils
 import vn.com.line.linedemo.viewmodel.DownloadImageViewModel
-import java.io.File
 
 
 class DownloadImageActivity : BaseActivity() {
@@ -35,6 +37,7 @@ class DownloadImageActivity : BaseActivity() {
         )
         init()
         setUpViewModels()
+        setGlobalLayoutListener()
         val buildVersion = Build.VERSION.SDK_INT
         if (buildVersion >= Build.VERSION_CODES.M) {
             if (!checkPermission()) {
@@ -43,8 +46,19 @@ class DownloadImageActivity : BaseActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun setGlobalLayoutListener() {
+        val layout =
+            findViewById<View>(Window.ID_ANDROID_CONTENT)
+        val observer = layout.viewTreeObserver
+        observer.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                layout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                checkPermissionThenFetchImages()
+            }
+        })
+    }
+
+    private fun checkPermissionThenFetchImages() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkPermission()) {
                 viewModel.checkLocalImageFolder()
@@ -71,9 +85,10 @@ class DownloadImageActivity : BaseActivity() {
     ) {
         when (requestCode) {
             STORAGE_REQUEST_PERMISSION -> if (grantResults.isNotEmpty()) {
-
-                val cameraAccepted = grantResults.first() == PackageManager.PERMISSION_GRANTED
-                if (!cameraAccepted) {
+                val storageAccepted = grantResults.first() == PackageManager.PERMISSION_GRANTED
+                if (storageAccepted) {
+                    viewModel.checkLocalImageFolder()
+                } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                             requestPermissions(
@@ -120,14 +135,13 @@ class DownloadImageActivity : BaseActivity() {
         })
 
         viewModel.imagePath.observe(this, Observer { path ->
-            if (binding.ivImage.width > 0 && binding.ivImage.height > 0)
-                ImageUtils.compressImageFromPath(
-                    path,
-                    binding.ivImage.width,
-                    binding.ivImage.height
-                )?.let {
-                    binding.ivImage.setImageBitmap(it)
-                }
+            ImageUtils.compressImageFromPath(
+                path,
+                binding.ivImage.width,
+                binding.ivImage.height
+            )?.let {
+                binding.ivImage.setImageBitmap(it)
+            }
         })
 
         viewModel.movieTitle.observe(this, Observer {
