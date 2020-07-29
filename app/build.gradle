@@ -63,4 +63,7 @@ dependencies {
 
     //KTX
     implementation "androidx.activity:activity-ktx:1.1.0"
+
+    //Live Data
+    implementation "androidx.lifecycle:lifecycle-livedata:2.2.0"
 }

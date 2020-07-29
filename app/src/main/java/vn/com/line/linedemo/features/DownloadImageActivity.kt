@@ -19,6 +19,8 @@ import androidx.lifecycle.Observer
 import vn.com.line.linedemo.R
 import vn.com.line.linedemo.databinding.ActivityMainBinding
 import vn.com.line.linedemo.util.ImageUtils
+import vn.com.line.linedemo.util.observeFreshly
+import vn.com.line.linedemo.util.removeObserverFreshly
 import vn.com.line.linedemo.viewmodel.DownloadImageViewModel
 
 
@@ -27,6 +29,15 @@ class DownloadImageActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel by viewModels<DownloadImageViewModel>()
     private var currentOrientation = 0
+    private val pathObserver = Observer<String> { path ->
+        ImageUtils.compressImageFromPath(
+            path,
+            binding.ivImage.width,
+            binding.ivImage.height
+        )?.let {
+            binding.ivImage.setImageBitmap(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,15 +134,7 @@ class DownloadImageActivity : AppCompatActivity() {
             binding.tvDownloaded.text = downloadedAsString
         })
 
-        viewModel.imagePath.observe(this, Observer { path ->
-            ImageUtils.compressImageFromPath(
-                path,
-                resources.displayMetrics.widthPixels,
-                resources.displayMetrics.heightPixels
-            )?.let {
-                binding.ivImage.setImageBitmap(it)
-            }
-        })
+        viewModel.imagePath.observeFreshly(this, pathObserver)
 
         viewModel.movieTitle.observe(this, Observer {
             binding.tvTitle.text = it
@@ -152,6 +155,11 @@ class DownloadImageActivity : AppCompatActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (currentOrientation != newConfig.orientation) viewModel.isRotated = true
+    }
+
+    override fun onStop() {
+        viewModel.imagePath.removeObserverFreshly(pathObserver)
+        super.onStop()
     }
 
     companion object {
